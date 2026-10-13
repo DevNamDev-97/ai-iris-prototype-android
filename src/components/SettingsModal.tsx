@@ -27,6 +27,7 @@ import { RippleButton } from './RippleButton.tsx';
 import { crossSessionMemory } from '../services/crossSessionMemory.ts';
 import { speakerMemoryStore } from '../services/speakerMemoryStore.ts';
 import { triggerHaptic } from '../utils/haptics.ts';
+import { getApiUrl, getBackendBaseUrl } from '../services/apiConfig.ts';
 
 export interface VoiceOption {
   id: string;
@@ -137,8 +138,40 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [isConfirmingReset, setIsConfirmingReset] = useState(false);
   const [resetSuccessMessage, setResetSuccessMessage] = useState<string | null>(null);
   const [isResetting, setIsResetting] = useState(false);
+  const [backendUrl, setBackendUrl] = useState(() => getBackendBaseUrl());
+  const [serverHealthStatus, setServerHealthStatus] = useState<'idle' | 'checking' | 'online' | 'error'>('idle');
+  const [serverHealthMessage, setServerHealthMessage] = useState<string>('');
 
   if (!isOpen) return null;
+
+  const handleTestBackendConnection = async () => {
+    setServerHealthStatus('checking');
+    setServerHealthMessage('Pinging Iris Backend API...');
+    try {
+      const res = await fetch(getApiUrl('/api/health'), { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        setServerHealthStatus('online');
+        setServerHealthMessage(`✓ Connected! Server Status: ${data.status || 'OK'} • Gemini Live Ready`);
+      } else {
+        setServerHealthStatus('error');
+        setServerHealthMessage(`⚠️ Server responded with HTTP ${res.status}`);
+      }
+    } catch (err: any) {
+      setServerHealthStatus('error');
+      setServerHealthMessage(`❌ Connection Failed: ${err?.message || 'Check network / URL'}`);
+    }
+  };
+
+  const handleSaveBackendUrl = (url: string) => {
+    const clean = url.trim();
+    setBackendUrl(clean);
+    if (clean) {
+      localStorage.setItem('iris_backend_server_url', clean);
+    } else {
+      localStorage.removeItem('iris_backend_server_url');
+    }
+  };
 
   const handleSearchMemory = (q: string) => {
     setMemorySearchQuery(q);
@@ -163,7 +196,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
       // 3. Reset server memory database
       try {
-        await fetch('/api/memory/reset', { method: 'POST' });
+        await fetch(getApiUrl('/api/memory/reset'), { method: 'POST' });
       } catch (err) {
         console.warn('Backend memory reset request error:', err);
       }
@@ -195,7 +228,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setPlayingVoiceId(voice.id);
 
     try {
-      const res = await fetch('/api/tts', {
+      const res = await fetch(getApiUrl('/api/tts'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -656,6 +689,52 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {diagnosticResult && (
               <div className="text-[11px] font-mono text-cyan-300 bg-cyan-950/40 p-2 rounded-lg border border-cyan-500/30">
                 {diagnosticResult}
+              </div>
+            )}
+          </div>
+
+          {/* Section: Android APK & Remote Backend Server URL */}
+          <div className="p-4 rounded-xl bg-slate-950/70 border border-cyan-500/25 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-cyan-400" />
+                <h4 className="text-xs font-bold text-slate-200 font-mono tracking-wider">
+                  ANDROID APK & BACKEND SERVER CONNECTION
+                </h4>
+              </div>
+              <RippleButton
+                variant="secondary"
+                size="sm"
+                onClick={handleTestBackendConnection}
+                disabled={serverHealthStatus === 'checking'}
+              >
+                <span>{serverHealthStatus === 'checking' ? 'Testing...' : 'Test Server'}</span>
+              </RippleButton>
+            </div>
+
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              When compiled into an Android APK, the app connects to your live cloud server for Gemini Live voice processing and multimodal chat.
+            </p>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={backendUrl}
+                onChange={(e) => handleSaveBackendUrl(e.target.value)}
+                placeholder="https://ais-dev-...run.app"
+                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-mono text-cyan-200 focus:outline-none focus:border-cyan-400"
+              />
+            </div>
+
+            {serverHealthMessage && (
+              <div className={`text-[11px] font-mono p-2 rounded-lg border ${
+                serverHealthStatus === 'online'
+                  ? 'text-emerald-300 bg-emerald-950/40 border-emerald-500/30'
+                  : serverHealthStatus === 'error'
+                  ? 'text-rose-300 bg-rose-950/40 border-rose-500/30'
+                  : 'text-cyan-300 bg-cyan-950/40 border-cyan-500/30'
+              }`}>
+                {serverHealthMessage}
               </div>
             )}
           </div>

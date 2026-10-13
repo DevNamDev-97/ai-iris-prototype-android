@@ -12,6 +12,7 @@ import { toEnglishAlphabets } from '../utils/transliteration.ts';
 import { screenShareService } from './screenShareService.ts';
 import { speakerMemoryStore } from './speakerMemoryStore.ts';
 import { matchSpeakerAcoustic } from '../utils/voiceRecognition.ts';
+import { getWsUrl } from './apiConfig.ts';
 
 export type AssistantState = 'IDLE' | 'CONNECTING' | 'LISTENING' | 'SPEAKING' | 'ERROR';
 
@@ -113,7 +114,6 @@ export class LiveClient {
       console.log(`📱 [LiveClient] Output AudioContext state: ${audioCtx.state}`);
 
       // 2. Connect to server-side Gemini Live via WebSocket with voice & dynamic device location context
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const locInfo = this.deviceBridge.getLocationInfo();
       const activeFolder = speakerMemoryStore.getActiveFolder();
       const params = new URLSearchParams();
@@ -122,12 +122,13 @@ export class LiveClient {
       if (locInfo.city) params.set('city', locInfo.city);
       if (locInfo.formattedTime) params.set('time', locInfo.formattedTime);
       if (locInfo.formattedDate) params.set('date', locInfo.formattedDate);
-      const isDeveloper = sessionStorage.getItem('iris_is_developer') === 'true';
+      const isDeveloper = sessionStorage.getItem('iris_is_developer') === 'true' || localStorage.getItem('iris_is_developer') === 'true';
       const developerFailed = sessionStorage.getItem('iris_developer_failed') === 'true';
       if (isDeveloper) params.set('isDev', 'true');
       if (developerFailed) params.set('mismatch', 'true');
 
-      const wsUrl = `${protocol}//${window.location.host}/api/live?${params.toString()}`;
+      const baseWs = getWsUrl('/api/live');
+      const wsUrl = baseWs.includes('?') ? `${baseWs}&${params.toString()}` : `${baseWs}?${params.toString()}`;
       console.log(`🔌 [LiveClient] Connecting to WebSocket: ${wsUrl}`);
 
       this.ws = new WebSocket(wsUrl);

@@ -52,10 +52,6 @@ export const ActionFeedback: React.FC<ActionFeedbackProps> = ({ lastAction, onCl
     name === 'triggerRebootChallenge' ||
     name === 'triggerDeleteHistoryChallenge';
 
-  if (!lastAction || isInternalModal) {
-    return null;
-  }
-
   // Extract direct targets
   const protocolUri = data.uri || (name === 'openApp' && data.app ? `${data.app.toLowerCase()}:` : '');
   const webUrl = data.targetUrl || data.url || (typeof data === 'string' && data.startsWith('http') ? data : '');
@@ -68,9 +64,35 @@ export const ActionFeedback: React.FC<ActionFeedbackProps> = ({ lastAction, onCl
   const items: Array<{ app: string; uri?: string; url?: string; category?: string }> = data.items || [];
   const isCamera = appName.toLowerCase() === 'camera' || data.app?.toLowerCase() === 'camera' || name === 'openCamera';
 
+  const triggerUriScheme = (uri: string) => {
+    try {
+      const link = document.createElement('a');
+      link.href = uri;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        try {
+          document.body.removeChild(link);
+        } catch (_) {}
+      }, 500);
+
+      // Also trigger location assignment for direct schemes on mobile if not intent/http
+      if (!uri.startsWith('intent:') && !uri.startsWith('http') && !uri.startsWith('mailto:') && !uri.startsWith('sms:')) {
+        try {
+          window.location.href = uri;
+        } catch (_) {}
+      }
+    } catch (e) {
+      console.warn('Auto protocol execution error:', e);
+    }
+  };
+
   // 1. Zero-Click Automatic Execution on Arrival for single or multiple apps
   useEffect(() => {
-    if (!lastAction || autoTriggeredRef.current === lastAction.timestamp) return;
+    if (!lastAction || isInternalModal || autoTriggeredRef.current === lastAction.timestamp) return;
     autoTriggeredRef.current = lastAction.timestamp;
 
     console.log('⚡ [ActionFeedback] Auto-triggering launch for:', name, isMultiple ? items : (protocolUri || webUrl));
@@ -110,44 +132,20 @@ export const ActionFeedback: React.FC<ActionFeedbackProps> = ({ lastAction, onCl
     } else if (protocolUri) {
       triggerUriScheme(protocolUri);
     }
-  }, [lastAction, name, protocolUri, webUrl, isMultiple, items, isCamera]);
-
-  const triggerUriScheme = (uri: string) => {
-    try {
-      const link = document.createElement('a');
-      link.href = uri;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        try {
-          document.body.removeChild(link);
-        } catch (_) {}
-      }, 500);
-
-      // Also trigger location assignment for direct schemes on mobile if not intent/http
-      if (!uri.startsWith('intent:') && !uri.startsWith('http') && !uri.startsWith('mailto:') && !uri.startsWith('sms:')) {
-        try {
-          window.location.href = uri;
-        } catch (_) {}
-      }
-    } catch (e) {
-      console.warn('Auto protocol execution error:', e);
-    }
-  };
+  }, [lastAction, isInternalModal, name, protocolUri, webUrl, isMultiple, items, isCamera]);
 
   // 2. Auto-dismiss after 6.5s for multi-app, 4.5s for single
   useEffect(() => {
-    if (!lastAction) return;
+    if (!lastAction || isInternalModal) return;
     const timer = setTimeout(() => {
       onClear();
     }, isMultiple ? 6500 : 4500);
     return () => clearTimeout(timer);
-  }, [lastAction, onClear, isMultiple]);
+  }, [lastAction, isInternalModal, onClear, isMultiple]);
 
-  if (!lastAction) return null;
+  if (!lastAction || isInternalModal) {
+    return null;
+  }
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);

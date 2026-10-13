@@ -20,6 +20,7 @@ import { locationService } from './locationService.ts';
 import { screenAnnotationService } from './screenAnnotationService.ts';
 import { screenShareService } from './screenShareService.ts';
 import { automationBridge } from './AutomationBridge.ts';
+import { getApiUrl } from './apiConfig.ts';
 
 export interface Contact {
   id: string;
@@ -104,7 +105,7 @@ export const DEFAULT_DEVICE_CONTACTS: Contact[] = [
   { id: '2', name: 'Mummy', phone: '+919876500001', email: 'mom@example.com', relation: 'Mother' },
   { id: '3', name: 'Dad', phone: '+919876500002', email: 'dad@example.com', relation: 'Father' },
   { id: '4', name: 'Papa', phone: '+919876500002', email: 'dad@example.com', relation: 'Father' },
-  { id: '5', name: 'Devansh Namdev (Dev)', phone: '+919876500000', email: 'dev@namdev.org', instagram: 'devansh_namdev', relation: 'Best Friend / Creator' },
+  { id: '5', name: 'Devansh Namdev (Dev)', phone: '+919876500000', email: 'dev@namdev.org', instagram: 'devansh_namdev', relation: 'Boyfriend / Creator' },
   { id: '6', name: 'Rahul Kumar', phone: '+919876500003', email: 'rahul.k@example.com', instagram: 'rahul_kumar', relation: 'Friend' },
   { id: '7', name: 'Rahul Sharma', phone: '+919876500004', email: 'rahul.s@example.com', instagram: 'rahul_sharma', relation: 'Colleague' },
   { id: '8', name: 'Priya Patel', phone: '+919876500005', email: 'priya@example.com', instagram: 'priya_patel', relation: 'Sister' },
@@ -3885,7 +3886,7 @@ export class DeviceActionBridge {
     console.log(`🔍 [DeviceActionBridge] retrieveSpreadsheet: "${query}"`);
 
     try {
-      const res = await fetch('/api/spreadsheets');
+      const res = await fetch(getApiUrl('/api/spreadsheets'));
       if (res.ok) {
         const data = await res.json();
         const sheets: any[] = data.spreadsheets || [];

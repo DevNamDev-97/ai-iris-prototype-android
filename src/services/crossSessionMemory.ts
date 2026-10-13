@@ -4,6 +4,8 @@
  * user facts/preferences, file locations, and discussion topics across sessions.
  */
 
+import { getApiUrl } from './apiConfig.ts';
+
 export interface StoredFileMemory {
   id: string;
   name: string;
@@ -177,7 +179,7 @@ export class CrossSessionMemoryEngine {
 
     this.syncDebounceTimer = setTimeout(async () => {
       try {
-        await fetch('/api/memory/sync', {
+        await fetch(getApiUrl('/api/memory/sync'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -458,7 +460,7 @@ export class CrossSessionMemoryEngine {
 
     // Also call server memory deletion endpoint
     try {
-      fetch('/api/memory/delete', {
+      fetch(getApiUrl('/api/memory/delete'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ personName }),

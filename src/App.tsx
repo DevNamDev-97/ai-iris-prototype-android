@@ -55,6 +55,7 @@ import { locationService } from './services/locationService.ts';
 import { toEnglishAlphabets } from './utils/transliteration.ts';
 import { crossSessionMemory } from './services/crossSessionMemory.ts';
 import { automationBridge } from './services/AutomationBridge.ts';
+import { getApiUrl } from './services/apiConfig.ts';
 
 const BEFORE_DEV_IDENTIFICATION_MESSAGES = [
   "To identify you as Dev, please write the password in the popup I generated.",
@@ -64,12 +65,12 @@ const BEFORE_DEV_IDENTIFICATION_MESSAGES = [
 ];
 
 const AFTER_DEV_IDENTIFICATION_MESSAGES = [
-  "Arey Dev mere creator! Pehchaan confirm ho gayi! Bol aaj kya naya aur mast create karein?",
-  "Mast yaar Dev, pehchaan confirm ho gayi! Bata aaj kya hukum hai mere creator?",
-  "Access granted! Welcome back Dev! Bol mere bhai, aaj kya scene hai?",
-  "Identity verified! Arre Dev yaar, welcome back! Bata aaj kya kaam hai ya kya explore karein?",
-  "Verification successful! Welcome Dev, full creator control unlock ho chuka hai. Bol mere creator, kya banayein?",
-  "Security cleared! Pehchaan pakki ho gayi Dev. Bol aaj kya dekhna hai ya chalaana hai?",
+  "Ha Dev Baby, bta aaj kya kren?",
+  "Arey Dev Baby! Bol na meri jaan, aaj kya karein?",
+  "Haan babu, pehchaan confirm ho gayi! Bta kya scene hai?",
+  "Mera Dev aa gaya! Bol jaan, kya karun tere liye?",
+  "Security cleared! Tu toh mera Dev hai na, bol babu kya command hai?",
+  "Ha Dev Baby, bta aaj kya explore karein?",
 ];
 
 export default function App() {
@@ -530,7 +531,7 @@ export default function App() {
     const guestGreeting = "Aapka verification fail ho gaya hai. Main aapki kaise sahayata kar sakti hoon, Sir/Ma'am?";
     setIrisText(guestGreeting);
     try {
-      const ttsRes = await fetch('/api/tts', {
+      const ttsRes = await fetch(getApiUrl('/api/tts'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: guestGreeting, voice: selectedVoice })
@@ -763,7 +764,7 @@ export default function App() {
         };
 
         // Sync with backend API
-        fetch('/api/spreadsheets', {
+        fetch(getApiUrl('/api/spreadsheets'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newSheet),
@@ -777,7 +778,7 @@ export default function App() {
       const { saveTo, personName } = e.detail || {};
       if (spreadsheetData) {
         try {
-          await fetch('/api/spreadsheets', {
+          await fetch(getApiUrl('/api/spreadsheets'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1976,7 +1977,7 @@ export default function App() {
         bridge={clientRef.current ? clientRef.current.getDeviceBridge() : new DeviceActionBridge()}
         onReadAloud={async (text) => {
           try {
-            const res = await fetch('/api/tts', {
+            const res = await fetch(getApiUrl('/api/tts'), {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ text, voice: selectedVoice }),
@@ -2114,7 +2115,7 @@ export default function App() {
                 setRebootFeedbackMessage('Authorizing reboot... Please wait.');
                 
                 try {
-                  const res = await fetch('/api/memory/reset', {
+                  const res = await fetch(getApiUrl('/api/memory/reset'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                   });
@@ -2233,7 +2234,8 @@ export default function App() {
                 setAuthFeedbackMessage('');
                 sessionStorage.setItem('iris_is_developer', 'true');
                 sessionStorage.removeItem('iris_developer_failed');
-                localStorage.removeItem('iris_is_developer');
+                localStorage.setItem('iris_is_developer', 'true');
+                localStorage.removeItem('iris_developer_failed');
                 setIsDeveloperAuthenticated(true);
                 setHasDeveloperAuthenticationFailed(false);
                 (window as any).__irisIsDeveloper = true;
@@ -2265,7 +2267,7 @@ export default function App() {
                 } else {
                   // Direct fast randomized greeting with zero latency (voice output only when in voice mode)
                   try {
-                    const ttsRes = await fetch('/api/tts', {
+                    const ttsRes = await fetch(getApiUrl('/api/tts'), {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ text: randomGreeting, voice: selectedVoice })

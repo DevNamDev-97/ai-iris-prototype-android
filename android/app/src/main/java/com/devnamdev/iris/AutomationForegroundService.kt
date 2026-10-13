@@ -62,14 +62,29 @@ class AutomationForegroundService : Service() {
 
         val notification = buildNotification()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(
+                    NOTIFICATION_ID,
+                    notification,
+                    0
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Standard startForeground fallback: ${e.message}")
+            try {
+                startForeground(NOTIFICATION_ID, notification)
+            } catch (fallbackEx: Exception) {
+                Log.e(TAG, "Fatal startForeground fallback error", fallbackEx)
+            }
         }
 
         Log.i(TAG, "Iris Foreground Service running (START_STICKY).")

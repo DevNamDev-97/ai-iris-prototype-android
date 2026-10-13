@@ -8,6 +8,7 @@
 
 import { RegisteredSpeaker, AcousticVoiceProfile, classifyAcousticGender } from '../utils/voiceRecognition.ts';
 import { crossSessionMemory } from './crossSessionMemory.ts';
+import { getApiUrl } from './apiConfig.ts';
 
 export interface PersonMemoryItem {
   id: string;
@@ -48,7 +49,7 @@ const DEV_FOLDER: PersonMemoryFolder = {
   gender: 'male',
   grammaticalStyle: 'masculine',
   pronounLabel: 'Male (chahta hai / karega)',
-  relationship: 'Creator',
+  relationship: 'Girlfriend / Creator',
   avatarColor: '#2563eb',
   voiceProfile: {
     estimatedPitchHz: 142.5,
@@ -68,15 +69,15 @@ const DEV_FOLDER: PersonMemoryFolder = {
   memories: [
     {
       id: 'mem-dev-creator',
-      key: 'Creator',
-      value: 'Dev is Iris\'s creator and best friend.',
+      key: 'Creator & Boyfriend',
+      value: 'Dev is Iris\'s creator and boyfriend. Iris is Dev\'s loving, witty, sassy girlfriend.',
       category: 'personal',
       timestamp: Date.now() - 1000 * 60 * 60 * 24 * 7,
     },
     {
       id: 'mem-dev-tu-tadak',
       key: 'Language Tone',
-      value: 'Tu-tadak close-friend tone ("tu", "karega", "yaar") is strictly reserved for Dev only.',
+      value: 'Tu-tadak loving girlfriend tone ("tu", "tera", "meri jaan", "babu", "mera Dev") is strictly reserved for Dev only.',
       category: 'preference',
       timestamp: Date.now(),
     },
@@ -137,7 +138,7 @@ class SpeakerMemoryStore {
 
   public async syncWithServer() {
     try {
-      await fetch('/api/speaker/sync-all', {
+      await fetch(getApiUrl('/api/speaker/sync-all'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -193,7 +194,7 @@ class SpeakerMemoryStore {
     }
 
     try {
-      fetch('/api/speaker/purge-all', {
+      fetch(getApiUrl('/api/speaker/purge-all'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       }).catch(() => {});

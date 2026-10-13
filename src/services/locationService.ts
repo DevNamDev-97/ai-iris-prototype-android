@@ -1,3 +1,5 @@
+import { getApiUrl } from './apiConfig.ts';
+
 export interface PreciseLocation {
   latitude: number;
   longitude: number;
@@ -237,7 +239,7 @@ class LocationService {
 
   public async reverseGeocode(lat: number, lng: number): Promise<void> {
     try {
-      const res = await fetch(`/api/location/reverse-geocode?lat=${lat}&lng=${lng}`);
+      const res = await fetch(getApiUrl(`/api/location/reverse-geocode?lat=${lat}&lng=${lng}`));
       if (res.ok) {
         const data = await res.json();
         if (data.formattedAddress) {

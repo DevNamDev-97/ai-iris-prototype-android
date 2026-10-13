@@ -23,6 +23,7 @@ import { MarkdownRenderer } from './MarkdownRenderer.tsx';
 import { locationService } from '../services/locationService.ts';
 import { crossSessionMemory } from '../services/crossSessionMemory.ts';
 import { toEnglishAlphabets } from '../utils/transliteration.ts';
+import { getApiUrl } from '../services/apiConfig.ts';
 
 export interface AttachedFile {
   id: string;
@@ -66,10 +67,10 @@ const QUICK_PROMPTS = [
 ];
 
 const DEV_WELCOME_MESSAGES = [
-  'Arey Dev mere creator! Main sun rahi hoon, bol aaj kya naya create karein?',
-  'Haan Dev! Bilkul active hoon. Bata aaj kya interesting discuss ya build karna hai?',
-  'Arey Dev mere bhai! Aaja, bata aaj kya scene hai?',
-  'Welcome Dev! Bata aaj kya code analyze karwana hai ya feature build karna hai?',
+  'Ha Dev Baby, bta aaj kya kren?',
+  'Arey Dev Baby! Bol na meri jaan, aaj kya plan hai?',
+  'Haan babu! Main sun rahi hoon, bta na kya karein?',
+  'Mera Dev aa gaya! Bol jaan, kya karun tere liye?',
 ];
 
 const GUEST_WELCOME_MESSAGES = [
@@ -289,7 +290,10 @@ const ChatPanelComponent: React.FC<ChatPanelProps> = ({
         text: m.text,
       }));
 
-      const res = await fetch('/api/chat', {
+      const isDevActive = isDeveloperAuthenticated || (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('iris_is_developer') === 'true') || (typeof localStorage !== 'undefined' && localStorage.getItem('iris_is_developer') === 'true');
+      const hasDevFailed = hasDeveloperAuthenticationFailed || (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('iris_developer_failed') === 'true');
+
+      const res = await fetch(getApiUrl('/api/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -306,8 +310,8 @@ const ChatPanelComponent: React.FC<ChatPanelProps> = ({
           time: new Date().toLocaleTimeString(),
           date: new Date().toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' }),
           voice: localStorage.getItem('iris_preferred_voice') || 'Leda',
-          isDeveloperAuthenticated,
-          hasDeveloperAuthenticationFailed,
+          isDeveloperAuthenticated: isDevActive,
+          hasDeveloperAuthenticationFailed: hasDevFailed,
         }),
       });
 
@@ -372,7 +376,7 @@ const ChatPanelComponent: React.FC<ChatPanelProps> = ({
 
     try {
       setIsPlayingAudioId(messageId);
-      const res = await fetch('/api/tts', {
+      const res = await fetch(getApiUrl('/api/tts'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

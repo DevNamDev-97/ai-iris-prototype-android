@@ -22,6 +22,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { locationService, PreciseLocation } from '../services/locationService.ts';
+import { getApiUrl } from '../services/apiConfig.ts';
 
 interface GoogleMapModalProps {
   isOpen: boolean;
@@ -120,7 +121,7 @@ const GoogleMapModalComponent: React.FC<GoogleMapModalProps> = ({
   // Fetch API key from server config if missing
   useEffect(() => {
     if (!apiKey || apiKey === 'MY_GOOGLE_MAPS_API_KEY') {
-      fetch('/api/config/maps-key')
+      fetch(getApiUrl('/api/config/maps-key'))
         .then((res) => res.json())
         .then((data) => {
           if (data.apiKey) {

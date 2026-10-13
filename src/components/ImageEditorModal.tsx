@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { FuturisticScrollTrack } from './FuturisticScrollTrack.tsx';
 import { DeviceActionBridge } from '../services/deviceActionBridge.ts';
+import { getApiUrl } from '../services/apiConfig.ts';
 
 interface ImageEditorModalProps {
   isOpen: boolean;
@@ -218,7 +219,7 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
         finalPrompt += ` (Focus this edit specifically around position X: ${targetCoords.x}%, Y: ${targetCoords.y}% on the canvas)`;
       }
 
-      const res = await fetch('/api/edit-image', {
+      const res = await fetch(getApiUrl('/api/edit-image'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

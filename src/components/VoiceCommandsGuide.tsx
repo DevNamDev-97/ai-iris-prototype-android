@@ -62,7 +62,7 @@ export const VoiceCommandsGuide: React.FC = () => {
       examples: [
         'Spacebar: Tap to Talk / Toggle Voice',
         'Esc: Stop speech / Close modals',
-        '"Kaisi hai Iris? Dev kaun hai?" (Best Friend & Creator)',
+        '"Kaisi hai Iris? Dev kaun hai?" (Girlfriend & Creator)',
         'Interrupt anytime: speak mid-sentence to pivot!',
       ],
     },
